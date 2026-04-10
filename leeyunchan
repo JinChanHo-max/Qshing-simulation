@@ -1,0 +1,25 @@
+phishing-demo-backend/
+│
+├── README.md
+├── .gitignore
+├── package.json
+├── server.js
+│
+├── config/
+│   └── db.js
+│
+├── models/
+│   └── Log.js
+│
+├── routes/
+│   └── apiRoutes.js
+│
+├── ai/
+│   └── urlRiskAnalyzer.js
+│
+├── utils/
+│   ├── geoip.js
+│   └── qrGenerator.js
+│
+└── socket/
+    └── socket.js
