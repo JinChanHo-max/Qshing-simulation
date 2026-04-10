@@ -1,0 +1,18 @@
+1. 데이터 수집 (POST /api/collect)
+{
+  "id": "user123",
+  "password": "password",
+  "url": "http://example.com"
+}
+
+2. URL 위험도 분석 (POST /api/check-url)
+{
+  "url": "http://phishing-site.com"
+}
+
+3. QR 코드 생성 (POST /api/generate-qr)
+{
+  "url": "http://example.com"
+}
+
+4. 로그 조회 (GET /api/logs)
