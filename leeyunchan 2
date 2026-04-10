@@ -16,3 +16,7 @@
 }
 
 4. 로그 조회 (GET /api/logs)
+
+* 실행 방법
+mongod
+node server.js
