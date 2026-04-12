@@ -1,0 +1,91 @@
+/* 전체 여백 초기화 및 폰트 설정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+}
+
+body {
+    background-color: #f4f5f7; /* 부드러운 회색 배경 */
+    display: flex;
+    justify-content: center;
+}
+
+/* 모바일 화면 크기에 맞춘 컨테이너 */
+.container {
+    width: 100%;
+    max-width: 480px; 
+    background-color: #ffffff;
+    min-height: 100vh;
+    padding: 40px 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.05);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+header h1 {
+    color: #00c652; /* 킥보드 앱 특유의 라임/그린 색상 */
+    font-size: 26px;
+    margin-bottom: 15px;
+}
+
+header p {
+    color: #444;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+header p strong {
+    color: #ff4d4f; /* 미납 금액 강조 */
+}
+
+/* 입력 폼 스타일링 */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px; 
+    background-color: #fafafa;
+}
+
+/* 시연을 위한 민감 정보 입력창 강조 */
+.warning-input input {
+    border: 1px solid #ff9c6e;
+    background-color: #fff7e6;
+}
+
+/* 제출 버튼 스타일 */
+.submit-btn {
+    width: 100%;
+    padding: 18px;
+    background-color: #00c652; /* 그린 테마 */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #00a343;
+}
