@@ -1,4 +1,4 @@
-# Qshing-simulation
+# Qshing-Simulation
 <div align= "center">
     <img src="https://capsule-render.vercel.app/api?type=waving&color=0:e100ff,100:00ddfa&height=180&text=Qshing-Simulation&animation=&fontColor=000000&fontSize=60" />
     </div>
