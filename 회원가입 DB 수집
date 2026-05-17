@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>어드민 — 수집 데이터 확인</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --green:#3fb950; --red:#f85149; --text:#e6edf3; --muted:#8b949e; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; padding:32px 24px; min-height:100vh; }
+    h1 { font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--green); margin-bottom:4px; }
+    .sub { font-size:12px; color:var(--muted); margin-bottom:28px; }
+    .actions { display:flex; gap:10px; margin-bottom:20px; }
+    button {
+      background:var(--card); border:1px solid var(--border); color:var(--text);
+      border-radius:6px; padding:8px 16px; font-size:13px; cursor:pointer;
+      font-family:'Noto Sans KR',sans-serif; transition:border-color 0.2s;
+    }
+    button:hover { border-color:var(--green); color:var(--green); }
+    button.danger:hover { border-color:var(--red); color:var(--red); }
+    .count { font-size:13px; color:var(--muted); margin-bottom:16px; }
+    .count span { color:var(--green); font-weight:700; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:400; font-family:'JetBrains Mono',monospace; font-size:11px; }
+    td { padding:12px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+    .badge { display:inline-block; background:rgba(63,185,80,0.15); color:var(--green); border-radius:4px; padding:2px 8px; font-size:11px; }
+    .mono { font-family:'JetBrains Mono',monospace; font-size:12px; }
+    .card-num { color:#f0883e; }
+    .empty { text-align:center; padding:60px; color:var(--muted); font-size:14px; }
+    .local-note { background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.3); border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:12px; color:#f85149; }
+  </style>
+</head>
+<body>
+  <h1>// 수집된 회원 데이터</h1>
+  <div class="sub">⚠️ 교육용 시연 — QR 큐싱 공격으로 수집된 정보 (피싱 페이지 결과)</div>
+
+  <div class="local-note" id="localNote" style="display:none">
+    📦 서버 미연결 상태 — localStorage에 저장된 데이터를 표시합니다.
+  </div>
+
+  <div class="actions">
+    <button onclick="load()">🔄 새로고침</button>
+    <button class="danger" onclick="resetData()">🗑 데이터 초기화</button>
+  </div>
+
+  <div class="count" id="count">로딩 중...</div>
+
+  <table id="table">
+    <thead>
+      <tr>
+        <th>#</th><th>이름</th><th>이메일</th><th>휴대폰</th>
+        <th>비밀번호</th><th>생년월일</th><th>카드번호</th><th>IP</th><th>가입시각</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script>
+    async function load() {
+      try {
+        const res = await fetch('http://localhost:5050/admin/users');
+        const data = await res.json();
+        render(data, false);
+      } catch {
+        // 서버 없을 때 localStorage fallback
+        document.getElementById('localNote').style.display = 'block';
+        const data = JSON.parse(localStorage.getItem('users') || '[]');
+        render(data.map((u,i) => ({id:i+1,...u})), true);
+      }
+    }
+
+    function render(data, isLocal) {
+      const tbody = document.getElementById('tbody');
+      document.getElementById('count').innerHTML =
+        `총 <span>${data.length}</span>명의 데이터가 수집됨`;
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty">수집된 데이터가 없습니다</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(u => `
+        <tr>
+          <td class="mono">${u.id}</td>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td class="mono">${u.phone || '-'}</td>
+          <td class="mono" style="color:#f85149">${u.password}</td>
+          <td class="mono">${u.birth || '-'}</td>
+          <td class="mono card-num">${u.card || '-'}</td>
+          <td class="mono">${u.ip || '-'}</td>
+          <td class="mono" style="font-size:11px;color:var(--muted)">${(u.created_at||'').slice(0,19)}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function resetData() {
+      if (!confirm('모든 데이터를 삭제할까요?')) return;
+      try {
+        await fetch('http://localhost:5050/admin/reset', { method:'POST' });
+      } catch {}
+      localStorage.removeItem('users');
+      load();
+    }
+
+    load();
+    setInterval(load, 5000); // 5초마다 자동 갱신
+  </script>
+</body>
+</html>
