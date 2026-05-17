@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickRide - 회원가입</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green: #00e676;
+      --dark: #0a0a0a;
+      --card: #131313;
+      --border: #222;
+      --text: #f0f0f0;
+      --muted: #555;
+      --error: #ff5252;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,230,118,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .brand-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      color: var(--green);
+      letter-spacing: 4px;
+      line-height: 1;
+    }
+
+    .brand-logo span {
+      color: var(--text);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 28px;
+      color: var(--text);
+    }
+
+    .card-title span {
+      color: var(--green);
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(0,230,118,0.1);
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+
+    .submit-btn:hover { background: #00ff88; }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .login-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .login-link a {
+      color: var(--green);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px; left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--card);
+      border: 1px solid var(--green);
+      color: var(--text);
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { border-color: var(--error); color: var(--error); }
+
+    /* ⚠️ 교육용 배너 */
+    .edu-banner {
+      background: rgba(255, 82, 82, 0.1);
+      border: 1px solid rgba(255, 82, 82, 0.4);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      font-size: 11px;
+      color: #ff8a80;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="brand">
+    <div class="brand-logo">Quick<span>Ride</span></div>
+    <div class="brand-sub">전동킥보드 공유 서비스</div>
+  </div>
+
+  <div class="card">
+    <div class="edu-banner">⚠️ 교육용 데모 페이지 — QR 큐싱 시연용</div>
+
+    <div class="card-title">회원가입으로 <span>무료 30분</span> 받기</div>
+
+    <form id="signupForm">
+      <div class="field">
+        <label>이름</label>
+        <input type="text" id="name" name="name" placeholder="홍길동" required />
+      </div>
+
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" id="email" name="email" placeholder="example@email.com" required />
+      </div>
+
+      <div class="field">
+        <label>휴대폰 번호</label>
+        <input type="tel" id="phone" name="phone" placeholder="010-0000-0000" required />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>비밀번호</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required />
+        </div>
+        <div class="field">
+          <label>비밀번호 확인</label>
+          <input type="password" id="password2" placeholder="••••••••" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>생년월일</label>
+        <input type="date" id="birth" name="birth" required />
+      </div>
+
+      <div class="field">
+        <label>카드 번호 (선택)</label>
+        <input type="text" id="card" name="card" placeholder="0000-0000-0000-0000" maxlength="19"/>
+      </div>
+
+      <button type="submit" class="submit-btn">회원가입 완료</button>
+    </form>
+
+    <div class="divider">또는</div>
+    <div class="login-link">이미 계정이 있으신가요? <a href="#">로그인</a></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // 카드 번호 자동 하이픈
+  document.getElementById('card').addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '').substring(0,16);
+    e.target.value = v.replace(/(.{4})/g, '$1-').replace(/-$/,'');
+  });
+
+  // 폰 번호 자동 하이픈
+  document.getElementById('phone').addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '').substring(0,11);
+    if (v.length > 7) v = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7);
+    else if (v.length > 3) v = v.slice(0,3)+'-'+v.slice(3);
+    e.target.value = v;
+  });
+
+  function showToast(msg, isError=false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const pw  = document.getElementById('password').value;
+    const pw2 = document.getElementById('password2').value;
+    if (pw !== pw2) { showToast('비밀번호가 일치하지 않습니다.', true); return; }
+
+    const data = {
+      name:     document.getElementById('name').value,
+      email:    document.getElementById('email').value,
+      phone:    document.getElementById('phone').value,
+      password: pw,
+      birth:    document.getElementById('birth').value,
+      card:     document.getElementById('card').value,
+    };
+
+    try {
+      const res = await fetch('http://localhost:5050/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        showToast('✅ 회원가입 완료! 무료 30분이 지급되었습니다.');
+        this.reset();
+      } else {
+        showToast(json.error || '오류 발생', true);
+      }
+    } catch {
+      // 서버 없을 때도 로컬 저장 (오프라인 시연용)
+      const saved = JSON.parse(localStorage.getItem('users') || '[]');
+      saved.push({ ...data, created_at: new Date().toISOString() });
+      localStorage.setItem('users', JSON.stringify(saved));
+      showToast('✅ 가입 완료! (로컬 저장됨)');
+      this.reset();
+    }
+  });
+</script>
+</body>
+</html>
