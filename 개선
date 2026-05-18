@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>QuickRider 공식 앱</title>
+
+    <!-- QR 카메라 스캔 라이브러리 -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #000000;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            padding-bottom: 30px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .header h1 {
+            color: #000000;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: #888888;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .content-area {
+            padding: 30px 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #000000;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #cccccc;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #fafafa;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: #000000;
+            background-color: #ffffff;
+        }
+
+        .btn-black {
+            width: 100%;
+            padding: 16px;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-black:active {
+            background-color: #333333;
+        }
+
+        /* =========================
+           카메라 스캔 영역 개선 버전
+           - 기본 라이브러리 UI 제거
+           - 큰 버튼 중심
+           - 전/후면 전환은 화살표 아이콘 버튼
+        ========================= */
+        .scan-card {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        /* 스캔 결과가 표시될 때 버튼/결과 사이의 흰 줄 제거 */
+        .scan-card.result-open {
+            margin-bottom: 0;
+        }
+
+        .scan-start-button {
+            width: 100%;
+            min-height: 125px;
+            padding: 20px;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+
+        .scan-start-button:active {
+            background-color: #333333;
+            transform: translateY(2px);
+        }
+
+        .scan-start-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .camera-start-icon {
+            width: 48px;
+            height: 48px;
+            display: block;
+        }
+
+        #scanBtnText {
+            font-size: 21px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+
+        #scanner-container {
+            display: none;
+            border: 3px solid #000000;
+            background: #000000;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+            margin-bottom: 25px;
+        }
+
+        .scanner-header {
+            background: #000000;
+            color: #ffffff;
+            padding: 12px 12px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .scanner-guide {
+            background: #000000;
+            color: #ffffff;
+            text-align: center;
+            padding: 14px 14px 8px;
+            font-size: 15px;
+            line-height: 1.5;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .scanner-guide strong {
+            display: block;
+            font-size: 16px;
+            font-weight: 900;
+            margin-bottom: 2px;
+        }
+
+        .scanner-guide span {
+            display: block;
+            color: #d7d7d7;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .scanner-close-button {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            background: #000000;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-close-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .scanner-close-button svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+        }
+
+        .reader-wrap {
+            background: #000000;
+            padding: 0 12px 0;
+        }
+
+        #reader {
+            width: 100%;
+            min-height: 300px;
+            background: #000000;
+        }
+
+        #reader video {
+            object-fit: cover;
+        }
+
+        .scanner-controls {
+            background: #000000;
+            padding: 10px 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-switch-button {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            background: #000000;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none;
+            transition: 0.2s;
+        }
+
+        .camera-switch-button:active {
+            transform: scale(0.94) rotate(20deg);
+            background: #222222;
+        }
+
+        .camera-switch-button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .camera-switch-button svg {
+            width: 48px;
+            height: 48px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 3.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        #result-box {
+            margin: 0 0 25px;
+            padding: 22px;
+            text-align: center;
+            display: none;
+            word-break: break-all;
+            border: 3px solid #000000;
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 17px;
+            line-height: 1.65;
+            font-weight: bold;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+        }
+
+        #result-box span,
+        #result-box small {
+            font-size: 15px;
+            color: #dddddd;
+            font-weight: normal;
+        }
+
+        #result-box strong {
+            color: #ffffff;
+        }
+
+        .success,
+        .danger {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .success small,
+        .danger small {
+            color: #dddddd;
+            font-weight: normal;
+        }
+
+        .divider {
+            height: 1px;
+            background: #dddddd;
+            margin: 25px 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #000000;
+        }
+
+        .nearby-box {
+            border: 1px solid #000000;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nearby-text strong {
+            font-size: 18px;
+        }
+
+        .btn-map {
+            background: transparent;
+            border: 1px solid #000000;
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+
+        /* QR 시나리오 / 위험 알림 화면 정리 */
+        .safe-notice {
+            display: none;
+            margin-bottom: 16px;
+            padding: 14px 15px;
+            border: 1px solid #b7f0c4;
+            background: #f0fff4;
+            color: #0f5132;
+            font-size: 13px;
+            line-height: 1.6;
+            border-radius: 12px;
+        }
+
+        .scenario-panel {
+            margin-bottom: 18px;
+            padding: 16px;
+            border: 1px solid #eeeeee;
+            background: #fafafa;
+            border-radius: 16px;
+        }
+
+        .scenario-desc {
+            margin: 0 0 14px;
+            color: #555555;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .scenario-btn {
+            min-height: 72px;
+            padding: 12px;
+            border: 1px solid #dddddd;
+            background: #ffffff;
+            color: #000000;
+            border-radius: 14px;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+
+        .scenario-btn strong {
+            display: block;
+            font-size: 13px;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .scenario-btn span {
+            display: block;
+            color: #666666;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .scenario-btn:active {
+            transform: scale(0.98);
+        }
+
+        .scenario-btn.safe {
+            border-color: #a7f3d0;
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .scenario-btn.warn {
+            border-color: #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .scenario-btn.danger {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        #dangerSection {
+            display: none;
+            margin-bottom: 18px;
+        }
+
+        #dangerSection.active {
+            display: block;
+        }
+
+        .danger-card {
+            padding: 20px;
+            border: 1px solid #fecaca;
+            background: #fff5f5;
+            color: #7f1d1d;
+            border-radius: 18px;
+            margin-bottom: 12px;
+        }
+
+        .danger-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: #fee2e2;
+            font-size: 25px;
+            margin-bottom: 12px;
+        }
+
+        .danger-title {
+            margin: 0 0 8px;
+            font-size: 23px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+
+        .danger-sub {
+            margin: 0 0 14px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .danger-detail {
+            background: #ffffff;
+            border: 1px solid #fecaca;
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+
+        .detail-row {
+            padding: 10px 0;
+            border-bottom: 1px solid #fee2e2;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            display: block;
+            margin-bottom: 4px;
+            color: #b91c1c;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .detail-value {
+            display: block;
+            color: #7f1d1d;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        .action-list {
+            margin: 14px 0 0;
+            padding-left: 20px;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .btn.primary,
+        .btn.secondary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 12px;
+        }
+
+        .btn.primary {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn.secondary {
+            margin-top: 8px;
+            border: 1px solid #000000;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .safety-banner {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-left: 4px solid #000000;
+            font-size: 12px;
+            color: #444444;
+            line-height: 1.6;
+        }
+
+        .safety-banner strong {
+            color: #000000;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- 로그인 화면 -->
+    <div id="screen-login" class="screen active">
+        <div class="header" style="margin-top: 30px; border: none;">
+            <h1>QuickRider</h1>
+            <p>공식 앱 서비스 로그인</p>
+        </div>
+
+        <div class="content-area">
+            <div class="form-group">
+                <label>아이디</label>
+                <input type="text" id="userid" placeholder="아이디를 입력하세요">
+            </div>
+
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="userpw" placeholder="비밀번호를 입력하세요">
+            </div>
+
+            <button class="btn-black" onclick="doLogin()" type="button">로그인</button>
+        </div>
+    </div>
+
+    <!-- 메인 화면 -->
+    <div id="screen-main" class="screen">
+        <div class="header" style="padding: 20px;">
+            <h1 style="font-size: 24px;">QuickRider</h1>
+            <p style="margin-top: 2px;">
+                환영합니다,
+                <span id="display-username" style="color:#000; font-weight:bold;">회원</span>님!
+            </p>
+        </div>
+
+        <div class="content-area" style="padding-top: 20px;">
+
+            <!-- 개선된 카메라 스캔 영역 -->
+            <div class="scan-card">
+                <button id="scanToggleBtn" class="scan-start-button" onclick="toggleScanner()" type="button" aria-label="QR 카메라 스캔 시작">
+                    <svg class="camera-start-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7 7L8.6 4.8C8.95 4.3 9.5 4 10.1 4H13.9C14.5 4 15.05 4.3 15.4 4.8L17 7H19C20.1 7 21 7.9 21 9V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V9C3 7.9 3.9 7 5 7H7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                    </svg>
+                    <span id="scanBtnText">QR 스캔</span>
+                </button>
+
+                <div id="scanner-container">
+                    <div class="scanner-header">
+                        <button id="closeScanBtn" class="scanner-close-button" onclick="stopScanner('QR 스캔')" type="button" aria-label="스캔 종료">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M6 6L18 18"></path>
+                                <path d="M18 6L6 18"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="reader-wrap">
+                        <div id="reader"></div>
+                    </div>
+
+                    <div class="scanner-guide">
+                        <strong>QR을 사각형 안에 맞춰주세요</strong>
+                        <span>인식되면 자동으로 잠금 해제가 진행됩니다</span>
+                    </div>
+
+                    <div class="scanner-controls">
+                        <!-- 전/후면 카메라 전환: 글씨 없는 화살표 버튼 -->
+                        <button id="cameraSwitchBtn" class="camera-switch-button" onclick="switchCamera()" type="button" aria-label="전후면 카메라 전환" title="전후면 카메라 전환">
+                            <svg viewBox="0 0 64 64" aria-hidden="true">
+                                <path d="M49 21C44.8 13.7 36.8 9 27.8 10.2C19.8 11.3 13.6 17.2 11.6 24.6"></path>
+                                <path d="M49 21L50.8 8.5"></path>
+                                <path d="M49 21L36.5 19.2"></path>
+                                <path d="M15 43C19.2 50.3 27.2 55 36.2 53.8C44.2 52.7 50.4 46.8 52.4 39.4"></path>
+                                <path d="M15 43L13.2 55.5"></path>
+                                <path d="M15 43L27.5 44.8"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결과 출력 영역 -->
+            <div id="result-box"></div>
+
+            <div class="divider"></div>
+
+            <div id="normalQrNotice" class="safe-notice">
+                <strong>✅ 공식 QR 검증 완료</strong><br>
+                공식 QuickRider QR입니다. 기기 ID와 서명값이 정상으로 확인되었습니다.
+                </div>
+
+                <div class="scenario-panel">
+                <p class="scenario-desc">
+                    정상 QR, 위조 QR, 만료 QR, 변조 QR 상황을 선택해서 방어 화면을 확인할 수 있습니다.
+                </p>
+
+                <div class="scenario-grid">
+                    <button type="button" class="scenario-btn safe" onclick="showNormalQr()">
+                    <strong>정상 QR</strong>
+                    <span>공식 QR 검증 완료</span>
+                    </button>
+
+                    <button type="button" class="scenario-btn danger" onclick="showDangerQr('fake')">
+                    <strong>위조 QR</strong>
+                    <span>공식 앱 발급 아님</span>
+                    </button>
+
+                    <button type="button" class="scenario-btn warn" onclick="showDangerQr('expired')">
+                    <strong>만료 QR</strong>
+                    <span>유효시간 초과</span>
+                    </button>
+
+                    <button type="button" class="scenario-btn danger" onclick="showDangerQr('tampered')">
+                    <strong>변조 QR</strong>
+                    <span>서명값 불일치</span>
+                    </button>
+                </div>
+                </div>
+
+            <div class="section" id="dangerSection">
+                <div class="danger-card">
+                    <div class="danger-icon">⚠️</div>
+
+                    <h2 class="danger-title">위험 알림</h2>
+                    <p class="danger-sub">
+                        이 QR은 정상 QuickRider QR로 검증되지 않았습니다.
+                    </p>
+
+                    <div class="danger-detail">
+                        <div class="detail-row">
+                            <span class="detail-label">QR 상태</span>
+                            <span class="detail-value" id="dangerStatus">위험 QR</span>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">감지 사유</span>
+                            <span class="detail-value" id="dangerReason">검증 실패</span>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">권장 행동</span>
+                            <span class="detail-value" id="dangerAction">공식 앱에서 다시 스캔하세요.</span>
+                        </div>
+                    </div>
+
+                    <ul class="action-list">
+                        <li>결제를 진행하지 마세요.</li>
+                        <li>개인정보를 입력하지 마세요.</li>
+                        <li>공식 QuickRider 앱에서 다시 스캔하세요.</li>
+                        <li>기기 QR 스티커 훼손 여부를 확인하세요.</li>
+                    </ul>
+                </div>
+
+                <button type="button" class="btn primary" onclick="goToHome()">홈으로 돌아가기</button>
+                <button type="button" class="btn secondary" onclick="goToLogin()">다시 스캔하기</button>
+            </div>
+
+            <div class="safety-banner">
+                <strong>⚠️ 라이딩 필수 안전 수칙</strong>
+                • 헬멧 등 인명보호장구 착용 필수<br>
+                • 원동기장치자전거 이상 면허 보유자만 이용 가능<br>
+                • 2인 이상 동반 탑승 절대 금지 및 음주운전 처벌
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let html5QrCode = null;
+    let isScanning = false;
+    let isProcessingScan = false;
+
+    let cameras = [];
+    let currentCameraIndex = 0;
+    let currentCameraId = null;
+    let currentFacingMode = "environment"; // 기본값: 후면 카메라
+
+    const resultBox = document.getElementById('result-box');
+    const scannerContainer = document.getElementById('scanner-container');
+    const scanCard = document.querySelector('.scan-card');
+    const scanToggleBtn = document.getElementById('scanToggleBtn');
+    const scanBtnText = document.getElementById('scanBtnText');
+    const cameraSwitchBtn = document.getElementById('cameraSwitchBtn');
+    const closeScanBtn = document.getElementById('closeScanBtn');
+
+    function doLogin() {
+        const userid = document.getElementById('userid').value.trim();
+
+        if (userid === "") {
+            alert("아이디를 입력해주세요.");
+            return;
+        }
+
+        document.getElementById('display-username').innerText = userid;
+
+        document.getElementById('screen-login').classList.remove('active');
+        document.getElementById('screen-main').classList.add('active');
+    }
+
+    function setMainScanButton(text, disabled = false) {
+        scanBtnText.innerText = text;
+        scanToggleBtn.disabled = disabled;
+    }
+
+    function setCameraControlButtons(disabled) {
+        cameraSwitchBtn.disabled = disabled;
+        closeScanBtn.disabled = disabled;
+    }
+
+    function showResult(type, html) {
+        resultBox.className = type;
+        resultBox.innerHTML = html;
+        resultBox.style.display = 'block';
+        scanCard.classList.add('result-open');
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+
+    function hideNormalQrNotice() {
+        const normalQrNotice = document.getElementById('normalQrNotice');
+        if (normalQrNotice) {
+            normalQrNotice.style.display = 'none';
+        }
+    }
+
+    function showNormalQr() {
+        hideDangerQr();
+
+        const normalQrNotice = document.getElementById('normalQrNotice');
+        if (normalQrNotice) {
+            normalQrNotice.style.display = 'block';
+            normalQrNotice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function renderDangerReason(type, detailText = '') {
+        const dangerMap = {
+            fake: {
+                status: '위조 QR 감지',
+                reason: '공식 앱에서 발급되지 않은 QR입니다.',
+                action: '결제를 중단하고 공식 QuickRider 앱에서 다시 스캔하세요.'
+            },
+            expired: {
+                status: '만료 QR 감지',
+                reason: 'QR 유효시간이 만료되었습니다.',
+                action: '새로운 QR을 다시 스캔하세요.'
+            },
+            tampered: {
+                status: '변조 QR 감지',
+                reason: '서명값 불일치 또는 기기 ID 변조가 감지되었습니다.',
+                action: '해당 QR 사용을 중단하고 기기 QR 스티커 훼손 여부를 확인하세요.'
+            },
+            external: {
+                status: '외부 사이트 QR 감지',
+                reason: detailText ? `공식 QuickRider QR이 아닌 외부 주소입니다. 목적지: ${detailText}` : '공식 QuickRider QR이 아닌 외부 주소입니다.',
+                action: '사이트 이동을 중단하고 공식 앱에서 다시 스캔하세요.'
+            },
+            unknown: {
+                status: '알 수 없는 QR 감지',
+                reason: detailText ? `QuickRider 공식 QR 형식이 아닙니다. 읽은 내용: ${detailText}` : 'QuickRider 공식 QR 형식이 아닙니다.',
+                action: '개인정보를 입력하지 말고 공식 앱에서 다시 스캔하세요.'
+            }
+        };
+
+        return dangerMap[type] || dangerMap.fake;
+    }
+
+    function showDangerQr(type, detailText = '') {
+        hideNormalQrNotice();
+
+        const dangerSection = document.getElementById('dangerSection');
+        const dangerInfo = renderDangerReason(type, detailText);
+
+        document.getElementById('dangerStatus').innerText = dangerInfo.status;
+        document.getElementById('dangerReason').innerText = dangerInfo.reason;
+        document.getElementById('dangerAction').innerText = dangerInfo.action;
+
+        dangerSection.classList.add('active');
+        dangerSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideDangerQr() {
+        const dangerSection = document.getElementById('dangerSection');
+        if (dangerSection) {
+            dangerSection.classList.remove('active');
+        }
+    }
+
+    function goToHome() {
+        hideDangerQr();
+    }
+
+    function goToLogin() {
+        hideDangerQr();
+        startScanner();
+    }
+
+    async function toggleScanner() {
+        if (isScanning) {
+            await stopScanner('QR 스캔');
+        } else {
+            await startScanner();
+        }
+    }
+
+    async function prepareCameras() {
+        try {
+            if (cameras.length === 0 && window.Html5Qrcode) {
+                cameras = await Html5Qrcode.getCameras();
+            }
+
+            if (cameras.length > 0 && !currentCameraId) {
+                const backCameraIndex = cameras.findIndex(camera => {
+                    const label = (camera.label || '').toLowerCase();
+                    return label.includes('back') ||
+                           label.includes('rear') ||
+                           label.includes('environment') ||
+                           label.includes('후면') ||
+                           label.includes('뒤');
+                });
+
+                currentCameraIndex = backCameraIndex >= 0 ? backCameraIndex : 0;
+                currentCameraId = cameras[currentCameraIndex].id;
+            }
+        } catch (error) {
+            console.warn('카메라 목록을 불러오지 못했습니다:', error);
+            cameras = [];
+            currentCameraId = null;
+        }
+    }
+
+    async function startScanner(options = {}) {
+        if (isScanning) return;
+
+        const keepResult = options.keepResult === true;
+
+        if (!keepResult) {
+            resultBox.style.display = 'none';
+            scanCard.classList.remove('result-open');
+            hideNormalQrNotice();
+            hideDangerQr();
+        }
+
+        scannerContainer.style.display = 'block';
+        scanToggleBtn.style.display = 'none';
+        setCameraControlButtons(true);
+        setMainScanButton('카메라 준비 중...', true);
+
+        try {
+            await prepareCameras();
+
+            html5QrCode = new Html5Qrcode('reader');
+
+            const config = {
+                fps: 10,
+                qrbox: {
+                    width: 260,
+                    height: 260
+                },
+                aspectRatio: 1.0
+            };
+
+            const cameraConfig = currentCameraId
+                ? currentCameraId
+                : { facingMode: currentFacingMode };
+
+            await html5QrCode.start(
+                cameraConfig,
+                config,
+                onScanSuccess,
+                onScanError
+            );
+
+            isScanning = true;
+            setCameraControlButtons(false);
+
+            // 실제 카메라가 1개뿐이면 전환 버튼 비활성화
+            if (cameras.length === 1) {
+                cameraSwitchBtn.disabled = true;
+            }
+
+        } catch (error) {
+            console.error('카메라 시작 실패:', error);
+
+            isScanning = false;
+            html5QrCode = null;
+            scannerContainer.style.display = 'none';
+            scanToggleBtn.style.display = 'flex';
+            setMainScanButton('QR 스캔', false);
+            setCameraControlButtons(false);
+
+            showResult(
+                'danger',
+                `🚨 카메라를 열 수 없습니다<br>
+                <span style="font-weight:normal;">
+                    브라우저에서 카메라 권한을 허용했는지 확인해주세요.<br>
+                    휴대폰에서는 HTTPS 또는 localhost 환경에서 실행하는 것이 좋습니다.
+                </span>`
+            );
+        }
+    }
+
+    async function stopScanner(nextText = 'QR 스캔') {
+        await shutdownScanner(true, nextText);
+    }
+
+    async function shutdownScanner(hideScanner = true, nextText = 'QR 스캔') {
+        setCameraControlButtons(true);
+
+        try {
+            if (html5QrCode && isScanning) {
+                await html5QrCode.stop();
+            }
+
+            if (html5QrCode) {
+                await html5QrCode.clear();
+            }
+        } catch (error) {
+            console.warn('스캐너 정리 중 오류:', error);
+        } finally {
+            html5QrCode = null;
+            isScanning = false;
+
+            if (hideScanner) {
+                scannerContainer.style.display = 'none';
+                scanToggleBtn.style.display = 'flex';
+                setMainScanButton(nextText, false);
+            }
+
+            setCameraControlButtons(false);
+        }
+    }
+
+    async function switchCamera() {
+        if (!isScanning || isProcessingScan) return;
+
+        setCameraControlButtons(true);
+
+        try {
+            await shutdownScanner(false);
+
+            if (cameras.length > 1) {
+                currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+                currentCameraId = cameras[currentCameraIndex].id;
+            } else {
+                // 카메라 목록을 못 가져온 경우 facingMode 방식으로 전/후면 전환 시도
+                currentCameraId = null;
+                currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            }
+
+            await startScanner({ keepResult: true });
+        } catch (error) {
+            console.error('카메라 전환 실패:', error);
+
+            await stopScanner('QR 스캔');
+
+            showResult(
+                'danger',
+                `🚨 카메라 전환 실패<br>
+                <span style="font-weight:normal;">
+                    전면/후면 카메라를 다시 선택할 수 없습니다.
+                </span>`
+            );
+        }
+    }
+
+    function onScanError(errorMessage) {
+        // QR이 아직 인식되지 않았을 때 반복적으로 발생하는 메시지라서 화면에는 표시하지 않음
+    }
+
+    async function onScanSuccess(decodedText, decodedResult) {
+        if (isProcessingScan) return;
+
+        isProcessingScan = true;
+
+        try {
+            await stopScanner('다시 스캔');
+
+            const safeDecodedText = escapeHtml(decodedText);
+
+            // 정상 QuickRider QR 형식
+            if (decodedText.startsWith('quickrider://unlock?token=')) {
+                showResult(
+                    'success',
+                    `✅ 정상 QR 확인<br>
+                    <span style="font-weight:normal;">
+                        서버에서 QR 토큰을 검증 중입니다... ⏳
+                    </span>`
+                );
+
+                const token = decodedText.split('token=')[1] || '';
+
+                try {
+                    const response = await fetch('/verify_qr', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ token: token })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        const kickboardId = data.data && data.data.kickboard_id
+                            ? escapeHtml(data.data.kickboard_id)
+                            : '알 수 없음';
+
+                        const message = data.message
+                            ? escapeHtml(data.message)
+                            : '잠금 해제가 완료되었습니다.';
+
+                        showResult(
+                            'success',
+                            `🔓 잠금 해제 완료!<br>
+                            <span style="font-weight:normal; display:block; margin-top:10px;">
+                                ${message}
+                            </span>
+                            🛴 기기 번호: <strong>${kickboardId}</strong>`
+                        );
+                    } else {
+                        const detail = data.detail
+                            ? escapeHtml(data.detail)
+                            : '위조되었거나 만료된 QR입니다.';
+
+                        showResult(
+                            'danger',
+                            `🚨 검증 실패<br>
+                            <span style="font-weight:normal;">
+                                ${detail}
+                            </span>`
+                        );
+                    }
+
+                } catch (error) {
+                    console.error('서버 통신 오류:', error);
+
+                    showResult(
+                        'danger',
+                        `🚨 통신 오류<br>
+                        <span style="font-weight:normal;">
+                            서버 연결 또는 /verify_qr API를 확인해주세요.
+                        </span>`
+                    );
+                }
+            }
+
+            // 외부 URL QR 감지
+            else if (
+                decodedText.startsWith('http://') ||
+                decodedText.startsWith('https://')
+            ) {
+                showResult(
+                    'danger',
+                    `🚨 외부 URL QR 감지<br>
+                    <span style="font-weight:normal; color:#dddddd; display:block; margin-top:10px;">
+                        공식 QR이 아니므로 이동을 차단했습니다.
+                    </span>
+                    <small>목적지: ${safeDecodedText}</small>`
+                );
+
+                showDangerQr('external', safeDecodedText);
+            }
+
+            // 지원하지 않는 QR
+            else {
+                showResult(
+                    'danger',
+                    `❌ 인식 불가 QR<br>
+                    <span style="font-weight:normal;">
+                        QuickRider 공식 QR 형식이 아닙니다.
+                    </span>
+                    <br>
+                    <small>읽은 내용: ${safeDecodedText}</small>`
+                );
+
+                showDangerQr('unknown', safeDecodedText);
+            }
+        } finally {
+            isProcessingScan = false;
+        }
+    }
+</script>
+
+</body>
+</html>
